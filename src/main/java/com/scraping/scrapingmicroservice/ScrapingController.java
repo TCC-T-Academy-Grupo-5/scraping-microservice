@@ -32,11 +32,6 @@ public class ScrapingController {
         this.webDriverObjectFactory = webDriverObjectFactory;
     }
 
-    @GetMapping("driver")
-    public String checkDriver() {
-        return this.webDriverObjectFactory.getObject().toString();
-    }
-
     @GetMapping
     public ResponseEntity<List<String>> scrapeJsoup(@RequestParam String brand,
             @RequestParam String type,
