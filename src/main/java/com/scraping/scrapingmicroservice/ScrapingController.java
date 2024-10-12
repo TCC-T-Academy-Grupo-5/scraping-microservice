@@ -8,6 +8,8 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,9 +23,19 @@ public class ScrapingController {
 
     private static final Logger log = LoggerFactory.getLogger(ScrapingController.class);
 
-    private String olxBaseUrl = "https://www.olx.com.br/tabela-fipe";
+    @Value("${olx.search.baseurl}")
+    private String olxBaseUrl;
 
-    private String userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0";
+    private final ObjectFactory<WebDriver> webDriverObjectFactory;
+
+    public ScrapingController(ObjectFactory<WebDriver> webDriverObjectFactory) {
+        this.webDriverObjectFactory = webDriverObjectFactory;
+    }
+
+    @GetMapping("driver")
+    public String checkDriver() {
+        return this.webDriverObjectFactory.getObject().toString();
+    }
 
     @GetMapping
     public ResponseEntity<List<String>> scrapeJsoup(@RequestParam String brand,
@@ -32,15 +44,9 @@ public class ScrapingController {
             @RequestParam String year,
             @RequestParam String version) throws IOException, InterruptedException {
 
-        System.setProperty("webdriver.chrome.driver", "src/main/resources/chromedriver.exe");
-        String userAgent = this.userAgent;
-
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("user-agent=" + userAgent);
-
-        WebDriver driver = new ChromeDriver(options);
-
         final List<String> response = new ArrayList<>();
+
+        WebDriver driver = this.webDriverObjectFactory.getObject();
 
         try {
 
