@@ -24,6 +24,8 @@ public class ScrapingConfig {
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
+        options.addArguments("--disable-blink-featuresAutomationControlled");
+        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--no-sandbox");
         options.addArguments("user-agent=" + this.chromedriverUserAgent);
 
