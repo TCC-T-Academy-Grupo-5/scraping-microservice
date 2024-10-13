@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class OlxScraperService implements PriceScraper {
@@ -23,6 +25,11 @@ public class OlxScraperService implements PriceScraper {
 
     @Value("${olx.search.baseurl}")
     private String olxBaseUrl;
+
+    private final Map<String, String> olxAlternativeBrandNames = new HashMap<>() {{
+        put("volkswagen", "vw-volkswagen");
+        put("chevrolet", "gm-chevrolet");
+    }};
 
     /**
      * Scrapes prices from OLX listings for a given vehicle type, model, year, and version.
@@ -70,14 +77,20 @@ public class OlxScraperService implements PriceScraper {
 
     private String getFormattedUrl(ScrapingRequestDTO request) {
         String type = request.type().getDescription();
-        String formattedYear = request.year().split(" ")[0];
-        String formattedVersion = request.version()
+        String brand = this.olxAlternativeBrandNames.getOrDefault(request.brand().toLowerCase(), request.brand());
+        String model = this.getFirstWord(request.model());
+        String year = this.getFirstWord(request.year());
+        String version = request.version()
                 .replace(" ", "-")
-                .replace("/", "-")
+                .replace("/", "")
                 .replace(".", "")
                 .replaceAll("-{2,}", "-");
 
-        return this.olxBaseUrl + "/" + type + "/" + request.brand() + "/" + request.model() + "/" + formattedYear + "/" + formattedVersion;
+        return this.olxBaseUrl + "/" + type + "/" + brand + "/" + model + "/" + year + "/" + version;
+    }
+
+    private String getFirstWord(String string) {
+        return string.split(" ")[0];
     }
 
     private Double extractPriceFromString(String priceText) {
@@ -98,7 +111,7 @@ public class OlxScraperService implements PriceScraper {
                 "Olx",
                 this.extractPriceFromString(priceText),
                 dealUrl,
-                LocalDate.now()
+                LocalDateTime.now()
         );
     }
 }
