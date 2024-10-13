@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/scrape")
+@RequestMapping("/deals")
 public class ScrapingController {
 
     private final ObjectFactory<WebDriver> webDriverObjectFactory;
