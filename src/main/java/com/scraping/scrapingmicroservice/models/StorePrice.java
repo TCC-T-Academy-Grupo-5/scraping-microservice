@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record StorePrice (
     UUID vehicleId,
-    String source,
+    String store,
     Double price,
     String dealUrl,
     LocalDate scrapedAt

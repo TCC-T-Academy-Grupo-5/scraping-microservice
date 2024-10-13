@@ -1,5 +1,7 @@
 package com.scraping.scrapingmicroservice.config;
 
+import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.services.OlxScraperService;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -7,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+
+import java.util.List;
 
 @Configuration
 public class ScrapingConfig {
@@ -30,5 +34,10 @@ public class ScrapingConfig {
         options.addArguments("user-agent=" + this.chromedriverUserAgent);
 
         return new ChromeDriver(options);
+    }
+
+    @Bean
+    public List<PriceScraper> scrapers() {
+        return List.of(new OlxScraperService());
     }
 }

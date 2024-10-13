@@ -1,14 +1,13 @@
 package com.scraping.scrapingmicroservice.controllers;
 
 import com.scraping.scrapingmicroservice.dto.ScrapingRequestDTO;
+import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
-import com.scraping.scrapingmicroservice.services.OlxScraperService;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,20 +17,26 @@ public class ScrapingController {
 
     private final ObjectFactory<WebDriver> webDriverObjectFactory;
 
-    private final OlxScraperService olxScraper;
+    private final List<PriceScraper> scrapers;
 
-    public ScrapingController(ObjectFactory<WebDriver> webDriverObjectFactory, OlxScraperService olxScraper) {
+    public ScrapingController(ObjectFactory<WebDriver> webDriverObjectFactory, List<PriceScraper> scrapers) {
         this.webDriverObjectFactory = webDriverObjectFactory;
-        this.olxScraper = olxScraper;
+        this.scrapers = scrapers;
     }
 
-    @GetMapping
-    public ResponseEntity<List<StorePrice>> scrapeStorePrices(@RequestBody ScrapingRequestDTO request) throws IOException, InterruptedException {
+    @PostMapping
+    public ResponseEntity<List<StorePrice>> scrapeStorePrices(@RequestBody ScrapingRequestDTO request) {
         WebDriver driver = this.webDriverObjectFactory.getObject();
 
-        List<StorePrice> olxPrices = this.olxScraper.scrapePrices(driver, request);
+        List<StorePrice> prices = new ArrayList<>();
 
-        List<StorePrice> prices = new ArrayList<>(olxPrices);
+        this.scrapers.forEach(scraper -> {
+            try {
+                prices.addAll(scraper.scrapePrices(driver, request));
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         driver.quit();
 

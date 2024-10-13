@@ -71,7 +71,8 @@ public class OlxScraperService implements PriceScraper {
     private String getFormattedUrl(ScrapingRequestDTO request) {
         String type = request.type().getDescription();
         String formattedYear = request.year().split(" ")[0];
-        String formattedVersion = request.version().replace(" ", "-")
+        String formattedVersion = request.version()
+                .replace(" ", "-")
                 .replace("/", "-")
                 .replace(".", "")
                 .replaceAll("-{2,}", "-");
