@@ -1,6 +1,6 @@
 package com.scraping.scrapingmicroservice.services;
 
-import com.scraping.scrapingmicroservice.dto.ScrapingRequestDTO;
+import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
@@ -34,7 +34,7 @@ public class OlxScraperService implements PriceScraper {
     /**
      * Scrapes prices from OLX listings for a given vehicle type, model, year, and version.
      * This method extracts the prices from vehicle listings on OLX by navigating to the
-     * generated URL based on the provided {@link ScrapingRequestDTO} and parsing the HTML elements
+     * generated URL based on the provided {@link StorePricesRequestDTO} and parsing the HTML elements
      * representing the offers.
      *
      * If the vehicle type is a truck, it returns an empty list because OLX does not list trucks
@@ -48,7 +48,7 @@ public class OlxScraperService implements PriceScraper {
      * @throws InterruptedException if the thread is interrupted during the wait for the page to load
      */
     @Override
-    public List<StorePrice> scrapePrices(WebDriver driver, ScrapingRequestDTO request) throws InterruptedException {
+    public List<StorePrice> scrapePrices(WebDriver driver, StorePricesRequestDTO request) throws InterruptedException {
         if (request.type().equals(VehicleType.TRUCK)) {
             return List.of();
         }
@@ -75,7 +75,7 @@ public class OlxScraperService implements PriceScraper {
         return prices;
     }
 
-    private String getFormattedUrl(ScrapingRequestDTO request) {
+    private String getFormattedUrl(StorePricesRequestDTO request) {
         String type = request.type().getDescription();
         String brand = this.olxAlternativeBrandNames.getOrDefault(request.brand().toLowerCase(), request.brand());
         String model = this.getFirstWord(request.model());
@@ -102,7 +102,7 @@ public class OlxScraperService implements PriceScraper {
         }
     }
 
-    private StorePrice extractStorePriceFromElement(WebElement deal, ScrapingRequestDTO request) {
+    private StorePrice extractStorePriceFromElement(WebElement deal, StorePricesRequestDTO request) {
         String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
         String dealUrl = deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
 

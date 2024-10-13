@@ -1,6 +1,6 @@
 package com.scraping.scrapingmicroservice.controllers;
 
-import com.scraping.scrapingmicroservice.dto.ScrapingRequestDTO;
+import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import org.openqa.selenium.WebDriver;
@@ -25,7 +25,7 @@ public class ScrapingController {
     }
 
     @PostMapping
-    public ResponseEntity<List<StorePrice>> scrapeStorePrices(@RequestBody ScrapingRequestDTO request) {
+    public ResponseEntity<List<StorePrice>> scrapeStorePrices(@RequestBody StorePricesRequestDTO request) {
         WebDriver driver = this.webDriverObjectFactory.getObject();
 
         List<StorePrice> prices = new ArrayList<>();
