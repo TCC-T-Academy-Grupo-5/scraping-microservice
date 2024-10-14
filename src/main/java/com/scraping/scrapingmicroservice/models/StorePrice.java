@@ -7,6 +7,7 @@ public record StorePrice (
         UUID vehicleId,
         String store,
         Double price,
+        Double mileageInKm,
         String dealUrl,
         LocalDateTime scrapedAt
 ){
