@@ -115,6 +115,7 @@ public class OlxScraperService implements PriceScraper {
         String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
         String dealUrl = deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
         String mileageText = deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:nth-child(2) span")).getAttribute("aria-label");
+        String imageUrl = deal.findElement(By.cssSelector("ul.olx-image-carousel__items li.olx-image-carousel__item:first-of-type img")).getAttribute("src");
 
         return new StorePrice(
                 request.vehicleId(),
@@ -122,6 +123,7 @@ public class OlxScraperService implements PriceScraper {
                 this.extractPriceFromString(priceText),
                 this.extractMileageFromString(mileageText),
                 dealUrl,
+                imageUrl,
                 LocalDateTime.now()
         );
     }
