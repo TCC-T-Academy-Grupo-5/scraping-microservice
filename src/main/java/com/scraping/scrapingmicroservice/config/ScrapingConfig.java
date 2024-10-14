@@ -1,6 +1,7 @@
 package com.scraping.scrapingmicroservice.config;
 
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.services.ChavesNaMaoScraperService;
 import com.scraping.scrapingmicroservice.services.OlxScraperService;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -38,6 +40,10 @@ public class ScrapingConfig {
 
     @Bean
     public List<PriceScraper> scrapers() {
-        return List.of(new OlxScraperService());
+        List<PriceScraper> scrapers = new ArrayList<>();
+//        scrapers.add(new OlxScraperService());
+        scrapers.add(new ChavesNaMaoScraperService());
+
+        return scrapers;
     }
 }
