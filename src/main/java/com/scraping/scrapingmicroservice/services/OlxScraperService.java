@@ -95,9 +95,18 @@ public class OlxScraperService implements PriceScraper {
 
     private Double extractPriceFromString(String priceText) {
         try {
-            return Double.parseDouble(priceText.split(" ")[1].replace(".", ""));
+            return Double.parseDouble(priceText.split(" ")[1].replace(",", ".").replace(".", ""));
         } catch (NumberFormatException e) {
             log.error("Could not parse price from string: {}", priceText);
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private Double extractMileageFromString(String mileageText) {
+        try {
+            return Double.parseDouble(mileageText.split(" ")[0].replace(",", ".").replace(".", ""));
+        } catch (NumberFormatException e) {
+            log.error("Could not parse mileage from string: {}", mileageText);
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -105,12 +114,16 @@ public class OlxScraperService implements PriceScraper {
     private StorePrice extractStorePriceFromElement(WebElement deal, StorePricesRequestDTO request) {
         String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
         String dealUrl = deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
+        String mileageText = deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:nth-child(2) span")).getAttribute("aria-label");
+        String imageUrl = deal.findElement(By.cssSelector("ul.olx-image-carousel__items li.olx-image-carousel__item:first-of-type img")).getAttribute("src");
 
         return new StorePrice(
                 request.vehicleId(),
                 "Olx",
                 this.extractPriceFromString(priceText),
+                this.extractMileageFromString(mileageText),
                 dealUrl,
+                imageUrl,
                 LocalDateTime.now()
         );
     }
