@@ -39,6 +39,17 @@ public class ChavesNaMaoScraperService implements PriceScraper {
             // verificar na listagem de versões o código da fipe
             WebElement vehiclelink = row.findElement(By.cssSelector("a"));
             vehiclelink.click();
+
+            List<WebElement> deals = driver.findElements(By.cssSelector("#similares span"));
+
+            deals.forEach(deal -> {
+                String baseUrl = "https://www.chavesnamao.com.br";
+                String dealUrl = deal.findElement(By.cssSelector("a")).getAttribute("href");
+                String imageUrl = deal.findElement(By.cssSelector("img")).getAttribute("src");
+                String store = "Carro Na Mão";
+                String price = deal.findElement(By.cssSelector(".price")).getText();
+                String milageInKm = deal.findElement(By.cssSelector(".milage")).getText();
+            });
         } catch (NoSuchElementException e) {
             return List.of();
         }

@@ -10,6 +10,7 @@ public record StorePrice (
         Double mileageInKm,
         String dealUrl,
         String imageUrl,
+        Boolean fullMatch,
         LocalDateTime scrapedAt
 ){
 }
