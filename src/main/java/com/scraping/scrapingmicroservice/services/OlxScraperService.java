@@ -1,9 +1,11 @@
 package com.scraping.scrapingmicroservice.services;
 
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
+import com.scraping.scrapingmicroservice.enums.ScrapedSites;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
+import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -13,10 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class OlxScraperService implements PriceScraper {
@@ -70,7 +69,13 @@ public class OlxScraperService implements PriceScraper {
 
         log.info("Collecting deals at {}", fullUrl);
 
-        deals.forEach(deal -> prices.add(this.extractStorePriceFromElement(deal, request)));
+        deals.forEach(deal -> {
+            try {
+                prices.add(this.extractStorePriceFromElement(deal, request));
+            } catch (Exception e) {
+                log.error("Error extracting deal: {}", e.getMessage());
+            }
+        });
 
         return prices;
     }
@@ -89,42 +94,69 @@ public class OlxScraperService implements PriceScraper {
         return this.olxBaseUrl + "/" + type + "/" + brand + "/" + model + "/" + year + "/" + version;
     }
 
-    private Double convertPriceToDouble(String priceText) {
-        try {
-            return Double.parseDouble(priceText.split(" ")[1].replace(",", ".").replace(".", ""));
-        } catch (NumberFormatException e) {
-            log.error("Could not parse price from string: {}", priceText);
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
     private Double convertMileageToDouble(String mileageText) {
         try {
-            return Double.parseDouble(mileageText.split(" ")[0].replace(",", ".").replace(".", ""));
+            return Double.parseDouble(mileageText.split(" ")[0]
+                                              .replace(",", ".")
+                                              .replace(".", ""));
         } catch (NumberFormatException e) {
             log.error("Could not parse mileage from string: {}", mileageText);
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    private StorePrice extractStorePriceFromElement(WebElement deal, StorePricesRequestDTO request) {
+    private Double extractValue(WebElement deal) {
         String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
-        String dealUrl = deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
-        String mileageText = deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:nth-child(2) span")).getAttribute("aria-label");
-        String imageUrl = deal.findElement(By.cssSelector("ul.olx-image-carousel__items li.olx-image-carousel__item:first-of-type img")).getAttribute("src");
+        return ScrapingUtils.convertPriceToDouble(priceText);
+    }
 
-        return new StorePrice(
-                request.vehicleId(),
-                "Olx",
-                this.convertPriceToDouble(priceText),
-                this.convertMileageToDouble(mileageText),
-                request.year(), // FIXME
-                dealUrl,
-                imageUrl,
-                false,
-                "",
-                "",
-                LocalDateTime.now()
-        );
+    private String extractDealUrl(WebElement deal) {
+        return deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
+    }
+
+    private String extractYear(WebElement deal) {
+        return deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:first-child span")).getText();
+    }
+
+    private Double extractMileage(WebElement deal) {
+        String mileageText = deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:nth-child(2) span"))
+                .getAttribute("aria-label");
+        return this.convertMileageToDouble(mileageText);
+    }
+
+    private String extractImageUrl(WebElement deal) {
+        return deal.findElement(By.cssSelector("ul.olx-image-carousel__items li.olx-image-carousel__item:first-of-type img"))
+                .getAttribute("src");
+    }
+
+    private String[] splitLocation(WebElement deal) {
+        return deal.findElement(By.cssSelector(".olx-ad-card__location-date-container .olx-text--regular"))
+                .getText().split(", ")[1].split(" ");
+    }
+
+    private String extractCity(WebElement deal) {
+        String[] locationParts = this.splitLocation(deal);
+        return String.join(" ", Arrays.copyOfRange(locationParts, 0, locationParts.length - 1));
+    }
+
+    private String extractState(WebElement deal) {
+        String[] locationParts = this.splitLocation(deal);
+        return locationParts[locationParts.length - 1];
+    }
+
+    private StorePrice extractStorePriceFromElement(WebElement deal, StorePricesRequestDTO request) {
+        UUID vehicleId = request.vehicleId();
+        String siteName = ScrapedSites.OLX.getName();
+        Double value = this.extractValue(deal);
+        Double mileage = this.extractMileage(deal);
+        String year = this.extractYear(deal);
+        String dealUrl = this.extractDealUrl(deal);
+        String imageUrl = this.extractImageUrl(deal);
+        Boolean isFullMatch = false;
+        String city = this.extractCity(deal);
+        String state = this.extractState(deal);
+        LocalDateTime scrapedAt = LocalDateTime.now();
+
+        return new StorePrice(vehicleId, siteName, value, mileage, year, dealUrl, imageUrl, isFullMatch, city, state, scrapedAt);
     }
 }

@@ -11,7 +11,7 @@ public record StorePrice (
         String year,
         String dealUrl,
         String imageUrl,
-        Boolean fullMatch,
+        Boolean isFullMatch,
         String city,
         String state,
         LocalDateTime scrapedAt

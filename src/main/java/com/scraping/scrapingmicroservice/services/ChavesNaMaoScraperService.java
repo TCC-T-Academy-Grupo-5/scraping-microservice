@@ -1,9 +1,11 @@
 package com.scraping.scrapingmicroservice.services;
 
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
+import com.scraping.scrapingmicroservice.enums.ScrapedSites;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
+import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -42,7 +44,7 @@ public class ChavesNaMaoScraperService implements PriceScraper {
             WebElement vehiclelink = row.findElement(By.cssSelector("a"));
             vehiclelink.click();
 
-            Thread.sleep(3000);
+            Thread.sleep(1000);
 
             List<WebElement> deals = driver.findElements(By.cssSelector("#similares > span"));
 
@@ -50,7 +52,7 @@ public class ChavesNaMaoScraperService implements PriceScraper {
                 try {
                     prices.add(this.extractPrice(deal, request));
                 } catch (NoSuchElementException e) {
-                    continue;
+                    log.error("Could not parse deal information: {}", e.getMessage());
                 }
             }
         } catch (NoSuchElementException e) {
@@ -66,19 +68,9 @@ public class ChavesNaMaoScraperService implements PriceScraper {
         return this.chavesNaMaoBaseUrl + "/" + request.brand() + "/" + request.model() + "/" + year;
     }
 
-    private Double convertPriceToDouble(String priceText) {
-        try {
-            return Double.parseDouble(priceText.split(" ")[1].replace(",", ".").replace(".", ""));
-        } catch (NumberFormatException e) {
-            log.error("Could not parse price from string: {}", priceText);
-            throw new RuntimeException(e.getMessage());
-        }
-    }
-
     private StorePrice extractPrice(WebElement deal, StorePricesRequestDTO request) {
         String dealUrl = deal.findElement(By.cssSelector("a")).getAttribute("href");
         String imageUrl = deal.findElement(By.cssSelector("img")).getAttribute("src");
-        String store = "Carro Na Mão";
         String price = deal.findElement(By.cssSelector(".price")).getText();
         String year = deal.findElement(By.cssSelector(".content p")).getText().split("\n")[0];
         String[] cityAndState = deal.findElement(By.cssSelector(".content p small")).getText().split(", ");
@@ -87,8 +79,8 @@ public class ChavesNaMaoScraperService implements PriceScraper {
 
         return new StorePrice(
                 request.vehicleId(),
-                store,
-                this.convertPriceToDouble(price),
+                ScrapedSites.CHAVES_NA_MAO.getName(),
+                ScrapingUtils.convertPriceToDouble(price),
                 null,
                 year,
                 dealUrl,
