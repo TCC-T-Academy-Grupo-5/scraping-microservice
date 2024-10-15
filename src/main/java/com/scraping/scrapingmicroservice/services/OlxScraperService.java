@@ -152,7 +152,7 @@ public class OlxScraperService implements PriceScraper {
         String year = this.extractYear(deal);
         String dealUrl = this.extractDealUrl(deal);
         String imageUrl = this.extractImageUrl(deal);
-        Boolean isFullMatch = false;
+        Boolean isFullMatch = true;
         String city = this.extractCity(deal);
         String state = this.extractState(deal);
         LocalDateTime scrapedAt = LocalDateTime.now();

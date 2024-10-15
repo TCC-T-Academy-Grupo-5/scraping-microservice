@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ChavesNaMaoScraperService implements PriceScraper {
@@ -48,13 +49,13 @@ public class ChavesNaMaoScraperService implements PriceScraper {
 
             List<WebElement> deals = driver.findElements(By.cssSelector("#similares > span"));
 
-            for (WebElement deal : deals) {
+            deals.forEach(deal -> {
                 try {
                     prices.add(this.extractPrice(deal, request));
                 } catch (NoSuchElementException e) {
                     log.error("Could not parse deal information: {}", e.getMessage());
                 }
-            }
+            });
         } catch (NoSuchElementException e) {
             return List.of();
         }
@@ -68,27 +69,42 @@ public class ChavesNaMaoScraperService implements PriceScraper {
         return this.chavesNaMaoBaseUrl + "/" + request.brand() + "/" + request.model() + "/" + year;
     }
 
-    private StorePrice extractPrice(WebElement deal, StorePricesRequestDTO request) {
-        String dealUrl = deal.findElement(By.cssSelector("a")).getAttribute("href");
-        String imageUrl = deal.findElement(By.cssSelector("img")).getAttribute("src");
+    private Double extractValue(WebElement deal) {
         String price = deal.findElement(By.cssSelector(".price")).getText();
-        String year = deal.findElement(By.cssSelector(".content p")).getText().split("\n")[0];
-        String[] cityAndState = deal.findElement(By.cssSelector(".content p small")).getText().split(", ");
-        String city = cityAndState[0];
-        String state = cityAndState[1];
+        return ScrapingUtils.convertPriceToDouble(price);
+    }
 
-        return new StorePrice(
-                request.vehicleId(),
-                ScrapedSites.CHAVES_NA_MAO.getName(),
-                ScrapingUtils.convertPriceToDouble(price),
-                null,
-                year,
-                dealUrl,
-                imageUrl,
-                false,
-                city,
-                state,
-                LocalDateTime.now()
-        );
+    private String extractYear(WebElement deal) {
+        return deal.findElement(By.cssSelector(".content p")).getText().split("\n")[0];
+    }
+
+    private String extractDealUrl(WebElement deal) {
+        return deal.findElement(By.cssSelector("a")).getAttribute("href");
+    }
+
+    private String extractImageUrl(WebElement deal) {
+        return deal.findElement(By.cssSelector("img")).getAttribute("src");
+    }
+
+    private String[] extractLocation(WebElement deal) {
+        return deal.findElement(By.cssSelector(".content p small")).getText().split(", ");
+    }
+
+    private StorePrice extractPrice(WebElement deal, StorePricesRequestDTO request) {
+        String[] location = this.extractLocation(deal);
+
+        UUID vehicleId = request.vehicleId();
+        String siteName = ScrapedSites.CHAVES_NA_MAO.getName();
+        Double value = this.extractValue(deal);
+        Double mileageInKm = null;
+        String year = this.extractYear(deal);
+        String dealUrl = this.extractDealUrl(deal);
+        String imageUrl = this.extractImageUrl(deal);
+        Boolean isFullMatch = false;
+        String city = location[0];
+        String state = location[1];
+        LocalDateTime scrapedAt = LocalDateTime.now();
+
+        return new StorePrice(vehicleId, siteName, value, mileageInKm, year, dealUrl, imageUrl, isFullMatch, city, state, scrapedAt);
     }
 }
