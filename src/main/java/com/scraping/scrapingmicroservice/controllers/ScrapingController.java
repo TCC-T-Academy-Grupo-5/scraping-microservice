@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/deals")
@@ -26,19 +27,26 @@ public class ScrapingController {
 
     @PostMapping
     public ResponseEntity<List<StorePrice>> scrapeStorePrices(@RequestBody StorePricesRequestDTO request) {
-        WebDriver driver = this.webDriverObjectFactory.getObject();
 
-        List<StorePrice> prices = new ArrayList<>();
+        List<CompletableFuture<List<StorePrice>>> futures = scrapers.stream()
+                .map(scraper -> CompletableFuture.supplyAsync(() -> {
+                    WebDriver driver = this.webDriverObjectFactory.getObject();
 
-        this.scrapers.forEach(scraper -> {
-            try {
-                prices.addAll(scraper.scrapePrices(driver, request));
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
+                    try {
+                        return scraper.scrapePrices(driver, request);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        driver.quit();
+                    }
+                }))
+                .toList();
 
-        driver.quit();
+        List<StorePrice> prices = futures.stream()
+                .map(CompletableFuture::join)
+                .flatMap(List::stream)
+                .toList();
+
 
         return ResponseEntity.ok(prices);
     }

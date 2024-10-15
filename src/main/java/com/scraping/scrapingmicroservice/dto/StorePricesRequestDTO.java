@@ -22,7 +22,10 @@ public record StorePricesRequestDTO(
         String year,
 
         @NotNull
-        String version
+        String version,
+
+        @NotNull
+        String fipeCode
 ) {
 
 }
