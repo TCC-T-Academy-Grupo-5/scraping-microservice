@@ -6,6 +6,7 @@ import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
+import org.apache.commons.text.WordUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -149,6 +150,8 @@ public class OlxScraperService implements PriceScraper {
         String siteName = ScrapedSites.OLX.getName();
         Double value = this.extractValue(deal);
         Double mileage = this.extractMileage(deal);
+        String modelName = WordUtils.capitalizeFully(request.brand() + " " + request.model());
+        String versionName = WordUtils.capitalizeFully(request.version());
         String year = this.extractYear(deal);
         String dealUrl = this.extractDealUrl(deal);
         String imageUrl = this.extractImageUrl(deal);
@@ -157,6 +160,18 @@ public class OlxScraperService implements PriceScraper {
         String state = this.extractState(deal);
         LocalDateTime scrapedAt = LocalDateTime.now();
 
-        return new StorePrice(vehicleId, siteName, value, mileage, year, dealUrl, imageUrl, isFullMatch, city, state, scrapedAt);
+        return new StorePrice(vehicleId,
+                              siteName,
+                              value,
+                              mileage,
+                              modelName,
+                              versionName,
+                              year,
+                              dealUrl,
+                              imageUrl,
+                              isFullMatch,
+                              city,
+                              state,
+                              scrapedAt);
     }
 }

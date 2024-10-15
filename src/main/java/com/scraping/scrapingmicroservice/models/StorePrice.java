@@ -8,6 +8,8 @@ public record StorePrice (
         String store,
         Double price,
         Double mileageInKm,
+        String modelName,
+        String versionName,
         String year,
         String dealUrl,
         String imageUrl,

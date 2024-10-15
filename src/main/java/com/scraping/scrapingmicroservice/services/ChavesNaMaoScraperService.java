@@ -6,6 +6,8 @@ import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.WordUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -51,7 +53,7 @@ public class ChavesNaMaoScraperService implements PriceScraper {
 
             deals.forEach(deal -> {
                 try {
-                    prices.add(this.extractPrice(deal, request));
+                    prices.add(this.extractStorePriceFromElement(deal, request));
                 } catch (NoSuchElementException e) {
                     log.error("Could not parse deal information: {}", e.getMessage());
                 }
@@ -74,6 +76,16 @@ public class ChavesNaMaoScraperService implements PriceScraper {
         return ScrapingUtils.convertPriceToDouble(price);
     }
 
+    private String extractModelName(WebElement deal) {
+        String modelName = deal.findElement(By.cssSelector(".content h2 strong")).getText();
+        return WordUtils.capitalizeFully(modelName);
+    }
+
+    private String extractVersionName(WebElement deal) {
+        String versionName = deal.findElement(By.cssSelector(".content h2 small")).getText();
+        return WordUtils.capitalizeFully(versionName);
+    }
+
     private String extractYear(WebElement deal) {
         return deal.findElement(By.cssSelector(".content p")).getText().split("\n")[0];
     }
@@ -90,13 +102,15 @@ public class ChavesNaMaoScraperService implements PriceScraper {
         return deal.findElement(By.cssSelector(".content p small")).getText().split(", ");
     }
 
-    private StorePrice extractPrice(WebElement deal, StorePricesRequestDTO request) {
+    private StorePrice extractStorePriceFromElement(WebElement deal, StorePricesRequestDTO request) {
         String[] location = this.extractLocation(deal);
 
         UUID vehicleId = request.vehicleId();
         String siteName = ScrapedSites.CHAVES_NA_MAO.getName();
         Double value = this.extractValue(deal);
         Double mileageInKm = null;
+        String modelName = this.extractModelName(deal);
+        String versionName = this.extractVersionName(deal);
         String year = this.extractYear(deal);
         String dealUrl = this.extractDealUrl(deal);
         String imageUrl = this.extractImageUrl(deal);
@@ -105,6 +119,18 @@ public class ChavesNaMaoScraperService implements PriceScraper {
         String state = location[1];
         LocalDateTime scrapedAt = LocalDateTime.now();
 
-        return new StorePrice(vehicleId, siteName, value, mileageInKm, year, dealUrl, imageUrl, isFullMatch, city, state, scrapedAt);
+        return new StorePrice(vehicleId,
+                              siteName,
+                              value,
+                              mileageInKm,
+                              modelName,
+                              versionName,
+                              year,
+                              dealUrl,
+                              imageUrl,
+                              isFullMatch,
+                              city,
+                              state,
+                              scrapedAt);
     }
 }
