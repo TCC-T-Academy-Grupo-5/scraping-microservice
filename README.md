@@ -10,6 +10,7 @@ This microservice is responsible for scraping prices from third-party websites b
 ## Project Structure
 - **`PriceScraper` Interface**: Defines the contract for scraping services. Implementations of this interface should specify how to search and extract offer data.
 - **`OlxScraperService` Implementation**: Performs scraping of offers from the OLX website based on the parameters provided in the request DTO.
+- **`ChavesNaMaoService` Implementation**: Performs scraping of offers from the Chaves Na Mão website based on the parameters provided in the request DTO.
 
 ## Requests
 The microservice exposes a single endpoint:
@@ -26,7 +27,8 @@ The microservice exposes a single endpoint:
   "brand": "Vehicle brand",
   "model": "Vehicle model",
   "year": "Vehicle year",
-  "version": "Vehicle version"
+  "version": "Vehicle version",
+  "fipeCode": "Vehicle fipe code"
 }
 ```
 - **Response**: A list of `StorePrice` objects representing the offers collected from the scraping:
@@ -37,7 +39,13 @@ The microservice exposes a single endpoint:
     "vehicleId": "UUID of the vehicle",
     "store": "Store name",
     "price": "Offer price",
+    "mileageInKm": "Vehicle mileage",
+    "year": "Vehicle year",
     "dealUrl": "Offer URL",
+    "imageUrl": "Vehicle image url",
+    "isFullMatch": "Indicates weather the deal fully matches the specified brand, model, year, version and FIPE code",
+    "city": "Offer city",
+    "state": "Offer state",
     "scrapedAt": "Date and time of scraping"
   }
 ]
@@ -55,23 +63,43 @@ The microservice exposes a single endpoint:
 curl -X POST http://localhost:8081/deals \
   -H "Content-Type: application/json" \
   -d '{
-    "vehicleId": "123e4567-e89b-12d3-a456-426614174000",
+    "vehicleId": "200976e5-eeb1-41b9-b396-3c54f0dc909c",
     "type": "CAR",
-    "brand": "Volkswagen",
-    "model": "Gol",
-    "year": "2020",
-    "version": "1.0 Flex"
+    "brand": "Fiat",
+    "model": "Doblo",
+    "year": "2004 Gasolina",
+    "version": "Doblo Adventure/ Adv.ER 1.8 mpi 8V 103cv",
+    "fipeCode": "001204-1"
   }'
 ```
 ### Example Response
 ```json
 [
   {
-    "vehicleId": "123e4567-e89b-12d3-a456-426614174000",
-    "store": "OLX",
-    "price": 35000.0,
-    "dealUrl": "https://www.olx.com.br/ad/12345",
-    "scrapedAt": "2024-10-10T14:48:23"
+    "vehicleId": "200976e5-eeb1-41b9-b396-3c54f0dc909c",
+    "store": "Chaves Na Mão",
+    "price": 64900.0,
+    "mileageInKm": null,
+    "year": "2013",
+    "dealUrl": "https://www.chavesnamao.com.br/carro/ce-fortaleza/fiat-doblo-1.8-mpi-adventure-16v-4p-2013-mecanico-RS64900/id-2449910/",
+    "imageUrl": "https://www.chavesnamao.com.br/imn/0150X0100/N/veiculos/94881/2449910/fiat-doblo-1-8-mpi-adventure-16v-4p_f20bf767e8b.jpeg",
+    "isFullMatch": false,
+    "city": "Fortaleza",
+    "state": "CE",
+    "scrapedAt": "2024-10-15T14:18:26.003611"
+  },
+  {
+    "vehicleId": "200976e5-eeb1-41b9-b396-3c54f0dc909c",
+    "store": "Olx",
+    "price": 27000.0,
+    "mileageInKm": 100000.0,
+    "year": "2004",
+    "dealUrl": "https://go.olx.com.br/grande-goiania-e-anapolis/autos-e-pecas/carros-vans-e-utilitarios/fiat-doblo-motorhome-2004-1344489072",
+    "imageUrl": "https://img.olx.com.br/images/16/166425571717502.jpg",
+    "isFullMatch": true,
+    "city": "Goiânia",
+    "state": "GO",
+    "scrapedAt": "2024-10-15T14:18:27.4745949"
   }
 ]
 ```
