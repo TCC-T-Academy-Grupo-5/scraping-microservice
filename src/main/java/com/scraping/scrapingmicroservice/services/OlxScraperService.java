@@ -94,6 +94,11 @@ public class OlxScraperService implements PriceScraper {
         return this.olxBaseUrl + "/" + type + "/" + brand + "/" + model + "/" + year + "/" + version;
     }
 
+    private Double extractValue(WebElement deal) {
+        String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
+        return ScrapingUtils.convertPriceToDouble(priceText);
+    }
+
     private Double convertMileageToDouble(String mileageText) {
         try {
             return Double.parseDouble(mileageText.split(" ")[0]
@@ -105,17 +110,12 @@ public class OlxScraperService implements PriceScraper {
         }
     }
 
-    private Double extractValue(WebElement deal) {
-        String priceText = deal.findElement(By.className("olx-ad-card__price")).getText().trim();
-        return ScrapingUtils.convertPriceToDouble(priceText);
+    private String extractYear(WebElement deal) {
+        return deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:first-child span")).getText();
     }
 
     private String extractDealUrl(WebElement deal) {
         return deal.findElement(By.className("olx-ad-card__link-wrapper")).getAttribute("href");
-    }
-
-    private String extractYear(WebElement deal) {
-        return deal.findElement(By.cssSelector("li.olx-ad-card__labels-item:first-child span")).getText();
     }
 
     private Double extractMileage(WebElement deal) {
