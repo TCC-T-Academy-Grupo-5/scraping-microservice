@@ -6,7 +6,6 @@ import com.scraping.scrapingmicroservice.enums.VehicleType;
 import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
@@ -28,6 +27,22 @@ public class ChavesNaMaoScraperService implements PriceScraper {
     @Value("${scrapingservice.baseurl.chavesnamao}")
     private String chavesNaMaoBaseUrl;
 
+    /**
+     * Scrapes prices from Chaves na Mão listings for a given vehicle type, model, and year.
+     * This service scrapes vehicle prices from the Chaves na Mão website based on the provided
+     * {@link StorePricesRequestDTO}. It navigates to a dynamically generated URL based on the vehicle
+     * details, searches for deals using XPath and CSS selectors, and extracts relevant pricing information.
+     *
+     * If the vehicle type is a truck, it returns an empty list because Chaves na Mão does not support
+     * truck listings in its FIPE section. The method includes a delay to ensure the page has fully loaded
+     * before extracting data.
+     *
+     * @param driver the WebDriver instance used to navigate the Chaves na Mão website
+     * @param request the request containing vehicle details (brand, model, year, and FIPE code)
+     * @return a list of {@link StorePrice} objects containing the scraped prices from Chaves na Mão listings,
+     *         or an empty list if no matching offers are found or if the vehicle type is a truck
+     * @throws InterruptedException if the thread is interrupted during the wait for the page to load
+     */
     @Override
     public List<StorePrice> scrapePrices(WebDriver driver, StorePricesRequestDTO request) throws InterruptedException {
         if (request.type().equals(VehicleType.TRUCK)) {
