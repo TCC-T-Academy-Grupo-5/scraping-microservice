@@ -8,9 +8,12 @@ public record StorePrice (
         String store,
         Double price,
         Double mileageInKm,
+        String year,
         String dealUrl,
         String imageUrl,
         Boolean fullMatch,
+        String city,
+        String state,
         LocalDateTime scrapedAt
 ){
 }

@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,7 +29,8 @@ public class ChavesNaMaoScraperService implements PriceScraper {
             return List.of();
         }
 
-        // acessar página em que a url segue padrão marca/modelo/ano
+        List<StorePrice> prices = new ArrayList<>();
+
         String fullUrl = this.getFormattedUrl(request);
 
         driver.get(fullUrl);
@@ -36,34 +39,64 @@ public class ChavesNaMaoScraperService implements PriceScraper {
             String fipeCode = request.fipeCode();
             WebElement row = driver.findElement(By.xpath("//td[text()='" + fipeCode + "']/parent::tr"));
 
-            // verificar na listagem de versões o código da fipe
             WebElement vehiclelink = row.findElement(By.cssSelector("a"));
             vehiclelink.click();
 
-            List<WebElement> deals = driver.findElements(By.cssSelector("#similares span"));
+            Thread.sleep(3000);
 
-            deals.forEach(deal -> {
-                String baseUrl = "https://www.chavesnamao.com.br";
-                String dealUrl = deal.findElement(By.cssSelector("a")).getAttribute("href");
-                String imageUrl = deal.findElement(By.cssSelector("img")).getAttribute("src");
-                String store = "Carro Na Mão";
-                String price = deal.findElement(By.cssSelector(".price")).getText();
-                String milageInKm = deal.findElement(By.cssSelector(".milage")).getText();
-            });
+            List<WebElement> deals = driver.findElements(By.cssSelector("#similares > span"));
+
+            for (WebElement deal : deals) {
+                try {
+                    prices.add(this.extractPrice(deal, request));
+                } catch (NoSuchElementException e) {
+                    continue;
+                }
+            }
         } catch (NoSuchElementException e) {
             return List.of();
         }
 
-        // se código da fipe for igual ao do veículo passado, entrar no link correspondente
-
-        // pegar as ofertas da página correspondente
-
-        return List.of();
+        return prices;
     }
 
     private String getFormattedUrl(StorePricesRequestDTO request) {
         String year = request.year().split(" ")[0];
 
         return this.chavesNaMaoBaseUrl + "/" + request.brand() + "/" + request.model() + "/" + year;
+    }
+
+    private Double convertPriceToDouble(String priceText) {
+        try {
+            return Double.parseDouble(priceText.split(" ")[1].replace(",", ".").replace(".", ""));
+        } catch (NumberFormatException e) {
+            log.error("Could not parse price from string: {}", priceText);
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    private StorePrice extractPrice(WebElement deal, StorePricesRequestDTO request) {
+        String dealUrl = deal.findElement(By.cssSelector("a")).getAttribute("href");
+        String imageUrl = deal.findElement(By.cssSelector("img")).getAttribute("src");
+        String store = "Carro Na Mão";
+        String price = deal.findElement(By.cssSelector(".price")).getText();
+        String year = deal.findElement(By.cssSelector(".content p")).getText().split("\n")[0];
+        String[] cityAndState = deal.findElement(By.cssSelector(".content p small")).getText().split(", ");
+        String city = cityAndState[0];
+        String state = cityAndState[1];
+
+        return new StorePrice(
+                request.vehicleId(),
+                store,
+                this.convertPriceToDouble(price),
+                null,
+                year,
+                dealUrl,
+                imageUrl,
+                false,
+                city,
+                state,
+                LocalDateTime.now()
+        );
     }
 }

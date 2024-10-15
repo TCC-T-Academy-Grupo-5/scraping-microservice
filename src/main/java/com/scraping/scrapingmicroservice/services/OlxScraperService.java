@@ -10,7 +10,6 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//@Service
+@Service
 public class OlxScraperService implements PriceScraper {
 
     private static final Logger log = LoggerFactory.getLogger(OlxScraperService.class);
@@ -79,8 +78,8 @@ public class OlxScraperService implements PriceScraper {
     private String getFormattedUrl(StorePricesRequestDTO request) {
         String type = request.type().getDescription();
         String brand = this.olxAlternativeBrandNames.getOrDefault(request.brand().toLowerCase(), request.brand());
-        String model = this.getFirstWord(request.model());
-        String year = this.getFirstWord(request.year());
+        String model = request.model().split(" ")[0];
+        String year = request.year().split(" ")[0];
         String version = request.version()
                 .replace(" ", "-")
                 .replace("/", "")
@@ -90,11 +89,7 @@ public class OlxScraperService implements PriceScraper {
         return this.olxBaseUrl + "/" + type + "/" + brand + "/" + model + "/" + year + "/" + version;
     }
 
-    private String getFirstWord(String string) {
-        return string.split(" ")[0];
-    }
-
-    private Double extractPriceFromString(String priceText) {
+    private Double convertPriceToDouble(String priceText) {
         try {
             return Double.parseDouble(priceText.split(" ")[1].replace(",", ".").replace(".", ""));
         } catch (NumberFormatException e) {
@@ -103,7 +98,7 @@ public class OlxScraperService implements PriceScraper {
         }
     }
 
-    private Double extractMileageFromString(String mileageText) {
+    private Double convertMileageToDouble(String mileageText) {
         try {
             return Double.parseDouble(mileageText.split(" ")[0].replace(",", ".").replace(".", ""));
         } catch (NumberFormatException e) {
@@ -121,10 +116,14 @@ public class OlxScraperService implements PriceScraper {
         return new StorePrice(
                 request.vehicleId(),
                 "Olx",
-                this.extractPriceFromString(priceText),
-                this.extractMileageFromString(mileageText),
+                this.convertPriceToDouble(priceText),
+                this.convertMileageToDouble(mileageText),
+                request.year(), // FIXME
                 dealUrl,
                 imageUrl,
+                false,
+                "",
+                "",
                 LocalDateTime.now()
         );
     }

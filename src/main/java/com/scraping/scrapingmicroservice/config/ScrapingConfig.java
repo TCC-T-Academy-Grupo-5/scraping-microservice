@@ -41,7 +41,7 @@ public class ScrapingConfig {
     @Bean
     public List<PriceScraper> scrapers() {
         List<PriceScraper> scrapers = new ArrayList<>();
-//        scrapers.add(new OlxScraperService());
+        scrapers.add(new OlxScraperService());
         scrapers.add(new ChavesNaMaoScraperService());
 
         return scrapers;
