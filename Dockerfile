@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . /app
 
 COPY ./src/main/resources/chromedriver /usr/local/bin/chromedriver
-RUN chmod +x /usr/local/bin/chromedriver
+RUN chmod +x /app/mvnw && ./mvnw clean package -DskipTests
 
 RUN ./mvnw clean package -DskipTests
 
