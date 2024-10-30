@@ -1,9 +1,9 @@
-package com.scraping.scrapingmicroservice.services;
+package com.scraping.scrapingmicroservice.services.storepricescrapers;
 
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
 import com.scraping.scrapingmicroservice.enums.ScrapedSites;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
-import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.StorePriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
 import org.apache.commons.text.WordUtils;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-public class ChavesNaMaoScraperService implements PriceScraper {
+public class ChavesNaMaoScraperService implements StorePriceScraper {
     private static final Logger log = LoggerFactory.getLogger(ChavesNaMaoScraperService.class);
     @Value("${scrapingservice.baseurl.chavesnamao}")
     private String chavesNaMaoBaseUrl;
