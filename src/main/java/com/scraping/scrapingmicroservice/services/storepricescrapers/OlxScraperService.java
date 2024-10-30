@@ -1,9 +1,9 @@
-package com.scraping.scrapingmicroservice.services;
+package com.scraping.scrapingmicroservice.services.storepricescrapers;
 
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
 import com.scraping.scrapingmicroservice.enums.ScrapedSites;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
-import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.StorePriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import com.scraping.scrapingmicroservice.utils.ScrapingUtils;
 import org.apache.commons.text.WordUtils;
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
-public class OlxScraperService implements PriceScraper {
+public class OlxScraperService implements StorePriceScraper {
 
     private static final Logger log = LoggerFactory.getLogger(OlxScraperService.class);
 

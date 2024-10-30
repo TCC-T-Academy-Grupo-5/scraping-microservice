@@ -1,8 +1,10 @@
 package com.scraping.scrapingmicroservice.config;
 
-import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
-import com.scraping.scrapingmicroservice.services.ChavesNaMaoScraperService;
-import com.scraping.scrapingmicroservice.services.OlxScraperService;
+import com.scraping.scrapingmicroservice.interfaces.FipePriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.StorePriceScraper;
+import com.scraping.scrapingmicroservice.services.fipepricescrapers.TabelaCarrosScraper;
+import com.scraping.scrapingmicroservice.services.storepricescrapers.ChavesNaMaoScraperService;
+import com.scraping.scrapingmicroservice.services.storepricescrapers.OlxScraperService;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -39,11 +41,16 @@ public class ScrapingConfig {
     }
 
     @Bean
-    public List<PriceScraper> scrapers() {
-        List<PriceScraper> scrapers = new ArrayList<>();
+    public List<StorePriceScraper> storePriceScrapers() {
+        List<StorePriceScraper> scrapers = new ArrayList<>();
         scrapers.add(new OlxScraperService());
         scrapers.add(new ChavesNaMaoScraperService());
 
         return scrapers;
+    }
+
+    @Bean
+    public FipePriceScraper fipePriceScraper() {
+        return new TabelaCarrosScraper();
     }
 }

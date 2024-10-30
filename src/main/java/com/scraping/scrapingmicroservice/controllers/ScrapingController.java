@@ -1,14 +1,14 @@
 package com.scraping.scrapingmicroservice.controllers;
 
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
-import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.StorePriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,9 +18,9 @@ public class ScrapingController {
 
     private final ObjectFactory<WebDriver> webDriverObjectFactory;
 
-    private final List<PriceScraper> scrapers;
+    private final List<StorePriceScraper> scrapers;
 
-    public ScrapingController(ObjectFactory<WebDriver> webDriverObjectFactory, List<PriceScraper> scrapers) {
+    public ScrapingController(ObjectFactory<WebDriver> webDriverObjectFactory, List<StorePriceScraper> scrapers) {
         this.webDriverObjectFactory = webDriverObjectFactory;
         this.scrapers = scrapers;
     }

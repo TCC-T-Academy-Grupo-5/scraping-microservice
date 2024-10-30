@@ -6,6 +6,6 @@ import org.openqa.selenium.WebDriver;
 
 import java.util.List;
 
-public interface PriceScraper {
+public interface StorePriceScraper {
     List<StorePrice> scrapePrices(WebDriver driver, StorePricesRequestDTO request) throws InterruptedException;
 }

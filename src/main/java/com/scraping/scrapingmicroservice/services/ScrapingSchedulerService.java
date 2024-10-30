@@ -3,7 +3,8 @@ package com.scraping.scrapingmicroservice.services;
 import com.scraping.scrapingmicroservice.dto.StorePricesRequestDTO;
 import com.scraping.scrapingmicroservice.dto.VehicleResponseDTO;
 import com.scraping.scrapingmicroservice.enums.VehicleType;
-import com.scraping.scrapingmicroservice.interfaces.PriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.FipePriceScraper;
+import com.scraping.scrapingmicroservice.interfaces.StorePriceScraper;
 import com.scraping.scrapingmicroservice.models.StorePrice;
 import org.openqa.selenium.WebDriver;
 import org.springframework.beans.factory.ObjectFactory;
@@ -27,55 +28,44 @@ import java.util.concurrent.Executor;
 public class ScrapingSchedulerService {
 
     private final ObjectFactory<WebDriver> webDriverObjectFactory;
-    private final List<PriceScraper> scrapers;
+    private final List<StorePriceScraper> scrapers;
     private final WebClient webClient;
     private final Executor taskExecutor;
+    private final FipePriceScraper fipePriceScraper;
 
     @Autowired
-    public ScrapingSchedulerService(ObjectFactory<WebDriver> webDriverObjectFactory, List<PriceScraper> scrapers, WebClient.Builder webClientBuilder, @Qualifier("taskExecutor") Executor taskExecutor) {
+    public ScrapingSchedulerService(ObjectFactory<WebDriver> webDriverObjectFactory,
+            List<StorePriceScraper> scrapers,
+            WebClient.Builder webClientBuilder,
+            @Qualifier("taskExecutor") Executor taskExecutor,
+            FipePriceScraper fipePriceScraper) {
         this.webDriverObjectFactory = webDriverObjectFactory;
         this.scrapers = scrapers;
         this.webClient = webClientBuilder.baseUrl("http://localhost:8080").build();
         this.taskExecutor = taskExecutor;
+        this.fipePriceScraper = fipePriceScraper;
     }
 
     @Scheduled(fixedRate = 3600000)
     public void scheduledScrape() {
-      //  List<VehicleResponseDTO> vehiclesGol = getVehiclesByModel("Gol");
         List<VehicleResponseDTO> vehiclesPalio = getVehiclesByModel("Palio");
-    /*    List<VehicleResponseDTO> vehiclesUno = getVehiclesByModel("Uno");
-        List<VehicleResponseDTO> vehiclesFiesta = getVehiclesByModel("Fiesta");
-        List<VehicleResponseDTO> vehiclesCelta = getVehiclesByModel("Celta");
-        List<VehicleResponseDTO> vehiclesOnix = getVehiclesByModel("Onix");
-        List<VehicleResponseDTO> vehiclesCorolla = getVehiclesByModel("Corolla");
-        List<VehicleResponseDTO> vehiclesStrada = getVehiclesByModel("Strada");
-        List<VehicleResponseDTO> vehiclesPolo = getVehiclesByModel("Polo");
-        List<VehicleResponseDTO> vehiclesPeugeot = getVehiclesByModel("Peugeot");
-        List<VehicleResponseDTO> vehiclesHB20 = getVehiclesByModel("HB20");*/
 
         List<VehicleResponseDTO> vehiclesToScrape = new ArrayList<>();
-      //  vehiclesToScrape.addAll(vehiclesGol);
         vehiclesToScrape.addAll(vehiclesPalio);
-     /*   vehiclesToScrape.addAll(vehiclesUno);
-        vehiclesToScrape.addAll(vehiclesFiesta);
-        vehiclesToScrape.addAll(vehiclesCelta);
-        vehiclesToScrape.addAll(vehiclesOnix);
-        vehiclesToScrape.addAll(vehiclesCorolla);
-        vehiclesToScrape.addAll(vehiclesStrada);
-        vehiclesToScrape.addAll(vehiclesPolo);
-        vehiclesToScrape.addAll(vehiclesPeugeot);
-        vehiclesToScrape.addAll(vehiclesHB20);*/
 
         for (VehicleResponseDTO vehicle : vehiclesToScrape) {
             StorePricesRequestDTO request = createScrapeRequest(vehicle);
-            for (PriceScraper scraper : scrapers) {
+            for (StorePriceScraper scraper : scrapers) {
                 CompletableFuture.supplyAsync(() -> {
                     List<StorePrice> prices;
+                    WebDriver driver = this.webDriverObjectFactory.getObject();
                     try {
-                        prices = scraper.scrapePrices(webDriverObjectFactory.getObject(), request);
+                        prices = scraper.scrapePrices(driver, request);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
+                    } finally {
+                        driver.quit();
                     }
 
                     prices.forEach(price -> {
@@ -108,6 +98,12 @@ public class ScrapingSchedulerService {
                 });
             }
         }
+    }
+
+
+    @Scheduled(cron = "0 0 0 2 * ?")
+    public void getMonthlyFipePrices() {
+        this.fipePriceScraper.scrapeFipePrices();
     }
 
     private List<VehicleResponseDTO> getVehiclesByModel(String model) {
